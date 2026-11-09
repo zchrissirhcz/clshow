@@ -1,6 +1,10 @@
 name: release-apk
 on: workflow_dispatch
 
+# 允许自动创建 Release / 上传资产（默认 GITHUB_TOKEN 无此写权限，缺了会 403）
+permissions:
+  contents: write
+
 env:
   BUILD_TOOLS_VERSION: 34.0.0
   NDK_VERSION: 27.2.12479018
