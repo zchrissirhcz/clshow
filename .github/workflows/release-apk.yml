@@ -1,0 +1,58 @@
+name: release-apk
+on: workflow_dispatch
+
+env:
+  BUILD_TOOLS_VERSION: 34.0.0
+  NDK_VERSION: 27.2.12479018
+  COMPILE_SDK: 33
+
+jobs:
+  release-apk:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    # 安装 AGP 所需的 SDK 组件（platform / build-tools / ndk），AGP 也会自动补齐
+    - name: install android sdk components
+      run: |
+        yes | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+        "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" \
+          "platforms;android-${COMPILE_SDK}" \
+          "build-tools;${BUILD_TOOLS_VERSION}" \
+          "cmake;3.22.1" \
+          "ndk;${NDK_VERSION}"
+
+    - name: build-apk
+      run: |
+        bash ./gradlew assembleRelease --stacktrace
+
+    - name: sign-apk
+      id: signapk
+      run: |
+        DATE=`date +'%Y%m%d'`
+        SHA_SHORT=`git rev-parse --short HEAD`
+        UNSIGNED_APK=`find app/build/outputs/apk/release -type f -name "*-release-unsigned.apk" | head -n 1`
+        SIGNED_APK=${{ github.event.repository.name }}-${DATE}.${SHA_SHORT}.apk
+        keytool -genkey -noprompt -alias clshow \
+            -dname "CN=clshow, OU=ID, O=clshow, L=Hursley, S=Hants, C=GB"\
+            -keystore clshow.keystore -storepass 7767517 -keypass 7767517 \
+            -keyalg RSA -keysize 2048 -validity 10000
+        ${ANDROID_HOME}/build-tools/${BUILD_TOOLS_VERSION}/zipalign -f -v 4 ${UNSIGNED_APK} ${SIGNED_APK}
+        ${ANDROID_HOME}/build-tools/${BUILD_TOOLS_VERSION}/apksigner sign --ks clshow.keystore --ks-key-alias clshow \
+            --ks-pass pass:7767517 --key-pass pass:7767517 --out ${SIGNED_APK} ${SIGNED_APK}
+        ${ANDROID_HOME}/build-tools/${BUILD_TOOLS_VERSION}/apksigner verify ${SIGNED_APK}
+        echo "SIGNED_APK=${SIGNED_APK}" >> $GITHUB_OUTPUT
+        echo "APK_VERSION=${DATE}.${SHA_SHORT}" >> $GITHUB_OUTPUT
+
+    - name: create-release
+      uses: softprops/action-gh-release@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag_name: ${{ steps.signapk.outputs.APK_VERSION }}
+        name: Release ${{ steps.signapk.outputs.APK_VERSION }}
+        files: ${{ steps.signapk.outputs.SIGNED_APK }}

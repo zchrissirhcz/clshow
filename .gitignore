@@ -1,0 +1,32 @@
+# ---- 本机路径 / 密钥（不得提交，否则破坏 Linux CI）----
+local.properties
+*.keystore
+*.jks
+
+# ---- Android / Gradle 构建产物 ----
+.gradle/
+build/
+app/build/
+captures/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# ---- 本项目的安卓/Windows 本地构建目录 ----
+build-android/
+build-android-icd/
+
+# ---- 日志 / 诊断 / 临时文件 ----
+*.log
+_diag/
+diag_*
+*.tmp
+*.bak
+
+# ---- IDE ----
+.idea/
+*.iml
+.vscode/
+.DS_Store

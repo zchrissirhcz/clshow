@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      android:versionCode="1"
+      android:versionName="1.0">
+    <application android:label="@string/app_name" >
+        <!-- 声明各厂商 OpenCL 运行库，用于 app 进程加载 libOpenCL.so（厂商 ICD Loader 壳）
+             及其引导到的驱动库。libOpenCL.so 是所有厂商的标准对外入口。 -->
+        <uses-native-library android:name="libOpenCL.so" android:required="false" />
+        <!-- 高通 Adreno -->
+        <uses-native-library android:name="libOpenCL_adreno.so" android:required="false" />
+        <uses-native-library android:name="libOpenCL-pixel.so" android:required="false" />
+        <!-- 三星 Exynos -->
+        <uses-native-library android:name="libOpenCL_samsung.so" android:required="false" />
+        <uses-native-library android:name="libSGPUOpenCL.so" android:required="false" />
+        <!-- ARM Mali -->
+        <uses-native-library android:name="libGLES_mali.so" android:required="false" />
+        <uses-native-library android:name="libmali.so" android:required="false" />
+        <!-- Imagination PowerVR -->
+        <uses-native-library android:name="libPVROCL.so" android:required="false" />
+        <activity android:name="zz.clshow.MainActivity" android:label="@string/app_name" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

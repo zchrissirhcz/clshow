@@ -1,0 +1,49 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'zz.clshow'
+    compileSdk 33
+    ndkVersion "27.2.12479018"
+
+    defaultConfig {
+        applicationId "zz.clshow"
+        archivesBaseName = "$applicationId"
+
+        minSdkVersion 21
+        targetSdkVersion 33
+
+        // opencl_shim 是通用加载方案，理论上可多 ABI；本机当前验证范围为 arm64，
+        // 故暂锁定 arm64-v8a（目标设备正是 arm64）。日后可放开支持多 ABI。
+        ndk {
+            abiFilters "arm64-v8a"
+        }
+
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+                // 加载方式开关：clshow.useIcdLoader=true 用 Khronos ICD Loader；
+                // 默认（false/未设）用自写 opencl_shim。
+                if (project.hasProperty("clshow.useIcdLoader") &&
+                    project.property("clshow.useIcdLoader").toString().equalsIgnoreCase("true")) {
+                    arguments "-DCLSHOW_USE_ICD_LOADER=ON"
+                }
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            // 使用 PATH 中的 CMake（local.properties 的 cmake.dir 指向 C:\soft\cmake\4.2.1），
+            // 避免 Android Studio 从 SDK 重新下载 cmake/ninja
+            path file('src/main/jni/CMakeLists.txt')
+        }
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
+}
